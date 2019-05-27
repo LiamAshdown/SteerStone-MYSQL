@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{c3208387-32eb-45a3-837d-d3ac1be1ad82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Database">
+      <UniqueIdentifier>{6e8bc17b-5d88-4d00-9501-0df6d8616622}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Database\PreparedStatements">
+      <UniqueIdentifier>{ff3ead75-2aa1-4753-a246-a3cfd275c667}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Database\Query">
+      <UniqueIdentifier>{f6edfdd9-08a0-485b-b6e0-964cb610d725}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Database\Result">
+      <UniqueIdentifier>{b9b682d2-99fb-44af-9ae5-1af8f4e97fce}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Database.cpp">
+      <Filter>Database</Filter>
+    </ClCompile>
+    <ClCompile Include="MYSQLPreparedStatement.cpp">
+      <Filter>Database\PreparedStatements</Filter>
+    </ClCompile>
+    <ClCompile Include="PreparedStatements.cpp">
+      <Filter>Database\PreparedStatements</Filter>
+    </ClCompile>
+    <ClCompile Include="PreparedResultSet.cpp">
+      <Filter>Database\Result</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SharedDefines.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="DatabaseTypes.h">
+      <Filter>Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Database.h">
+      <Filter>Database</Filter>
+    </ClInclude>
+    <ClInclude Include="MYSQLPreparedStatement.h">
+      <Filter>Database\PreparedStatements</Filter>
+    </ClInclude>
+    <ClInclude Include="PreparedStatements.h">
+      <Filter>Database\PreparedStatements</Filter>
+    </ClInclude>
+    <ClInclude Include="BindData.h">
+      <Filter>Database</Filter>
+    </ClInclude>
+    <ClInclude Include="PreparedResultSet.h">
+      <Filter>Database\Result</Filter>
+    </ClInclude>
+    <ClInclude Include="SQLCommon.h">
+      <Filter>Database\Result</Filter>
+    </ClInclude>
+    <ClInclude Include="Result.h">
+      <Filter>Database\Result</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
