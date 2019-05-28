@@ -46,18 +46,16 @@ namespace SteerStone
             uint32 const p_Port, std::string const p_Host, std::string const p_Database, uint32 const p_PoolSize);
 
     public:
-        /// Borrow
-        /// Borrow a connection
-        MYSQLPreparedStatement* Borrow();
+        /// GetPrepareStatement
+        /// GetPrepareStatement a PrepareStatement
+        PreparedStatementHolder* GetPrepareStatement();
 
-        /// UnBorrow
-        /// Remove connection from UnBorrowed pool and insert back into pool
-        /// @p_PreparedStatement : the connection we are handling
-        void UnBorrow(MYSQLPreparedStatement* p_PreparedStatement);
+        /// FreePrepareStatement
+        /// Release Prepare statement to be used again
+        void FreePrepareStatement(PreparedStatementHolder* p_PrepareStatement);
 
     private:
-        std::deque<MYSQLPreparedStatement*> m_Pool;
-        std::set<MYSQLPreparedStatement*> m_Borrowed;
+        std::vector<MYSQLPreparedStatement*> m_Pool;
         std::mutex m_Mutex;
     };
 } ///< NAMESPACE STEERSTONE

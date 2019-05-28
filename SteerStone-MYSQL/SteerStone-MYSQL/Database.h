@@ -48,12 +48,12 @@ namespace SteerStone
     public:
         /// GetPreparedStatement
         /// Returns a Prepare Statement from Pool
-        MYSQLPreparedStatement* GetPrepareStatement();
+        PreparedStatementHolder* GetPrepareStatement();
 
         /// FreePrepareStatement
         /// Free Prepare Statement
         /// @p_PreparedStatement : Connection we are freeing
-        void FreePrepareStatement(MYSQLPreparedStatement* p_PreparedStatement);
+        void FreePrepareStatement(PreparedStatementHolder* p_PreparedStatement);
 
     private:
         /// Database Variables

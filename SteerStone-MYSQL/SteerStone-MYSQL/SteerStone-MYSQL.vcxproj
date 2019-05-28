@@ -160,6 +160,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MYSQLPreparedStatement.cpp" />
     <ClCompile Include="PreparedResultSet.cpp" />
+    <ClCompile Include="PreparedStatementHolder.cpp" />
     <ClCompile Include="PreparedStatements.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -168,8 +169,9 @@
     <ClInclude Include="DatabaseTypes.h" />
     <ClInclude Include="MYSQLPreparedStatement.h" />
     <ClInclude Include="PreparedResultSet.h" />
+    <ClInclude Include="PreparedStatementHolder.h" />
     <ClInclude Include="PreparedStatements.h" />
-    <ClInclude Include="Result.h" />
+    <ClInclude Include="ResultSet.h" />
     <ClInclude Include="SharedDefines.h" />
     <ClInclude Include="SQLCommon.h" />
   </ItemGroup>

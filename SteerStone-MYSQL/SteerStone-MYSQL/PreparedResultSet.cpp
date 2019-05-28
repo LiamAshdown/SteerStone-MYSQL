@@ -22,6 +22,10 @@
 namespace SteerStone
 {
     /// Constructor
+    /// @p_Stmt : Prepare Statement
+    /// @p_Result : Result
+    /// @p_Fields : Field result
+    /// @p_FieldCount : Field count
     PreparedResultSet::PreparedResultSet(MYSQL_STMT* p_Stmt, MYSQL_RES* p_Result, MYSQL_FIELD * p_Fields, uint32 p_FieldCount)
         : m_Stmt(p_Stmt), m_Result(p_Result), m_Fields(p_Fields), m_RowCount(0), m_FieldCount(p_FieldCount), m_RowPosition(0)
     {
@@ -37,9 +41,7 @@ namespace SteerStone
         if (mysql_stmt_store_result(m_Stmt))
         {
             LOG_ERROR << "Cannot store result from MySQL Server. Error: " << mysql_stmt_error(m_Stmt);
-            delete[] m_IsNull;
-            delete[] m_Length;
-            delete[] m_Bind;
+            CleanUp();
             return;
         }
 
@@ -70,10 +72,7 @@ namespace SteerStone
         if (mysql_stmt_bind_result(m_Stmt, m_Bind))
         {
             LOG_ERROR << ("mysql_stmt_bind_result: Cannot bind result from MySQL server. Error: %s", __FUNCTION__, mysql_stmt_error(m_Stmt));
-            mysql_stmt_free_result(m_Stmt);
             CleanUp();
-            delete[] m_IsNull;
-            delete[] m_Length;
         }
 
         /// Buffer all rows in result
@@ -113,7 +112,6 @@ namespace SteerStone
                     m_Results[m_RowPosition * m_FieldCount + l_I].SetValue(l_Buffer, MysqlTypeToFieldType(m_Bind[l_I].buffer_type),
                         *m_Bind[l_I].length);
 
-
                     /// move buffer pointer to next part
                     m_Stmt->bind[l_I].buffer = (char*)l_Buffer + l_SizeType;
                 }
@@ -122,18 +120,9 @@ namespace SteerStone
             m_RowPosition++;
         }
 
-        /// Reset counter
         m_RowPosition = 0;
 
-        /// Delete result
-        if (m_Stmt->bind_result_done)
-        {
-            delete[] m_Stmt->bind->length;
-            delete[] m_Stmt->bind->is_null;
-        }
-
-        /// Free statement
-        mysql_stmt_free_result(m_Stmt);
+        CleanUp();
     }
 
     /// Deconstructor
@@ -143,13 +132,13 @@ namespace SteerStone
 
     /// FetchResult
     /// Return result
-    Result* PreparedResultSet::FetchResult() const
+    ResultSet* PreparedResultSet::FetchResult() const
     {
         assert(m_RowPosition < m_RowCount);
-        return const_cast<Result*>(&m_Results[m_RowPosition * m_FieldCount]);
+        return const_cast<ResultSet*>(&m_Results[m_RowPosition * m_FieldCount]);
     }
 
-    Result const& PreparedResultSet::operator[](std::size_t p_Index) const
+    ResultSet const& PreparedResultSet::operator[](std::size_t p_Index) const
     {
         assert(m_RowPosition < m_RowCount);
         assert(p_Index < m_FieldCount);
@@ -166,21 +155,6 @@ namespace SteerStone
         return true;
     }
 
-    /// CleanUp
-    /// Free Bind Memory
-    void PreparedResultSet::CleanUp()
-    {
-        if (m_Result)
-            mysql_free_result(m_Result);
-
-        if (m_Bind)
-        {
-            delete[](char*)m_Bind->buffer;
-            delete[] m_Bind;
-            m_Bind = nullptr;
-        }
-    }
-
     /// NextRow
     /// Get Next Row in result
     /// Low Level
@@ -191,5 +165,35 @@ namespace SteerStone
 
         int32 l_Code = mysql_stmt_fetch(m_Stmt);
         return l_Code == 0 || l_Code == MYSQL_DATA_TRUNCATED; ///< Success
+    }
+
+    /// CleanUp
+    /// Free Bind Memory
+    void PreparedResultSet::CleanUp()
+    {
+        if (m_Result)
+            mysql_free_result(m_Result);
+
+        /// If the statement has binded, then it took reference of the pointers
+        /// so delete from statement
+        if (m_Stmt->bind_result_done)
+        {
+            delete[] m_Stmt->bind->length;
+            delete[] m_Stmt->bind->is_null;
+        }
+        else
+        {
+            delete[] m_IsNull;
+            delete[] m_Length;
+        }
+
+        if (m_Bind)
+        {
+            delete[](char*)m_Bind->buffer;
+            delete[] m_Bind;
+            m_Bind = nullptr;
+        }
+
+        mysql_stmt_free_result(m_Stmt);
     }
 } ///< NAMESPACE STEERSTONE

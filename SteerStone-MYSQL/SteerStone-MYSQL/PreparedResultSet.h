@@ -19,7 +19,7 @@
 #ifndef _PREPARED_STATEMENT_RESULT_SET_h
 #define _PREPARED_STATEMENT_RESULT_SET_h
 #include "SharedDefines.h"
-#include "Result.h"
+#include "ResultSet.h"
 #endif /* !_PREPARED_STATEMENT_RESULT_SET_h */
 
 namespace SteerStone
@@ -28,6 +28,10 @@ namespace SteerStone
     {
     public:
         /// Constructor
+        /// @p_Stmt : Prepare Statement
+        /// @p_Result : Result
+        /// @p_Fields : Field result
+        /// @p_FieldCount : Field count
         PreparedResultSet(MYSQL_STMT* p_Stmt, MYSQL_RES* p_Result, MYSQL_FIELD* p_Fields, uint32 p_FieldCount);
 
         /// Deconstructor
@@ -36,9 +40,9 @@ namespace SteerStone
     public:
         /// FetchResult
         /// Return result
-        Result* FetchResult() const;
+        ResultSet* FetchResult() const;
 
-        Result const& operator[](std::size_t p_Index) const;
+        ResultSet const& operator[](std::size_t p_Index) const;
 
         /// GetNextRow
         /// High Level
@@ -68,6 +72,6 @@ namespace SteerStone
 
     private:
         uint32 m_RowPosition;
-        std::vector<Result> m_Results;
+        std::vector<ResultSet> m_Results;
     };
 }

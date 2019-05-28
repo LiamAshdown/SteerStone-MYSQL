@@ -1,16 +1,33 @@
+/*
+* Liam Ashdown
+* Copyright (C) 2019
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "PreparedStatements.h"
 
 namespace SteerStone
 {
-
+    /// Constructor
     PreparedStatements::PreparedStatements()
     {
     }
 
-
+    /// Deconstructor
     PreparedStatements::~PreparedStatements()
     {
-        LOG_INFO << "PreparedStatements";
     }
 
     /// SetUp
@@ -41,40 +58,42 @@ namespace SteerStone
         return 0;
     }
 
-    /// Borrow
-    /// Borrow a connection
-    MYSQLPreparedStatement * PreparedStatements::Borrow()
+    /// GetPrepareStatement
+    /// GetPrepareStatement a PrepareStatement
+    PreparedStatementHolder * PreparedStatements::GetPrepareStatement()
     {
         std::unique_lock<std::mutex> l_Guard(m_Mutex);
 
-        if (m_Pool.empty())
+        for (auto const& l_Itr : m_Pool)
         {
-            LOG_FATAL << "ALL CONNECTIONS ARE BORROWED! CRASHING...";
-            assert(!m_Pool.empty());
-            return nullptr;
+            MYSQLPreparedStatement* l_PreparedStatement = l_Itr;
+
+            for (uint32 l_I = 0; l_I < MAX_PREPARED_STATEMENTS; l_I++)
+            {
+                PreparedStatementHolder* l_PreparedStatementHolder = l_PreparedStatement->m_Statements[l_I];
+
+                if (l_PreparedStatementHolder->TryLock())
+                    return l_PreparedStatementHolder;
+            }
         }
 
-        /// Declare our connection from Pool
-        MYSQLPreparedStatement* l_PreparedStatement = m_Pool.front();
-        
-        /// Insert our borrowed connection into the borrowed pool
-        m_Borrowed.insert(l_PreparedStatement);
+        /// If we get here then there's a design logic flaw, it should be impossible for all statements to be used
+        /// unless we are running with thousands of players querying at same time which is unlikely
+        throw std::runtime_error("GetPrepareStatement: Could not get a prepare statement. All statements are taken.");
 
-        /// Remove connection from Pool
-        m_Pool.pop_front();
-
-        return l_PreparedStatement;
+        return nullptr;
     }
 
-    /// UnBorrow
-    /// Remove connection from UnBorrowed pool and insert back into pool
-    /// @p_PreparedStatement : the connection we are handling
-    void PreparedStatements::UnBorrow(MYSQLPreparedStatement* p_PreparedStatement)
+    /// FreePrepareStatement
+    /// Release Prepare statement to be used again
+    void PreparedStatements::FreePrepareStatement(PreparedStatementHolder* p_PrepareStatement)
     {
         std::unique_lock<std::mutex> l_Guard(m_Mutex);
 
-        m_Borrowed.erase(p_PreparedStatement);
+        /// Statement must be locked - if not something went wrong and we must investigate
+        assert(!p_PrepareStatement->TryLock());
 
-        m_Pool.push_back(p_PreparedStatement);
+        if (!p_PrepareStatement->TryLock())
+            p_PrepareStatement->Unlock();
     }
-}
+} ///< NAMESPACE STEERSTONE

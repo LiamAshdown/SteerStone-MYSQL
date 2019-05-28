@@ -37,6 +37,9 @@
     <ClCompile Include="PreparedResultSet.cpp">
       <Filter>Database\Result</Filter>
     </ClCompile>
+    <ClCompile Include="PreparedStatementHolder.cpp">
+      <Filter>Database\PreparedStatements</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SharedDefines.h">
@@ -60,11 +63,14 @@
     <ClInclude Include="PreparedResultSet.h">
       <Filter>Database\Result</Filter>
     </ClInclude>
-    <ClInclude Include="SQLCommon.h">
+    <ClInclude Include="PreparedStatementHolder.h">
+      <Filter>Database\PreparedStatements</Filter>
+    </ClInclude>
+    <ClInclude Include="ResultSet.h">
       <Filter>Database\Result</Filter>
     </ClInclude>
-    <ClInclude Include="Result.h">
-      <Filter>Database\Result</Filter>
+    <ClInclude Include="SQLCommon.h">
+      <Filter>Database</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

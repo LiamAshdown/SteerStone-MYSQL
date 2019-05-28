@@ -52,16 +52,16 @@ namespace SteerStone
 
     /// GetPreparedStatement
     /// Returns a Prepare Statement from Pool
-    MYSQLPreparedStatement* Database::GetPrepareStatement()
+    PreparedStatementHolder* Database::GetPrepareStatement()
     {
-       return m_PreparedStatements.Borrow();
+       return m_PreparedStatements.GetPrepareStatement();
     }
 
     /// FreePrepareStatement
     /// Free Prepare Statement
     /// @p_PreparedStatement : Connection we are freeing
-    void Database::FreePrepareStatement(MYSQLPreparedStatement* p_PreparedStatement)
+    void Database::FreePrepareStatement(PreparedStatementHolder* p_PreparedStatement)
     {
-        m_PreparedStatements.UnBorrow(p_PreparedStatement);
+        m_PreparedStatements.FreePrepareStatement(p_PreparedStatement);
     }
 } ///< NAMESPACE STEERSTONE

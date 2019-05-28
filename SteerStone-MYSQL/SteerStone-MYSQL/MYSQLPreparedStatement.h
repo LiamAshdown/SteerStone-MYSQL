@@ -19,11 +19,13 @@
 #ifndef _PREPARED_STATEMENT_MYSQL_PREPARED_STATEMENT_h
 #define _PREPARED_STATEMENT_MYSQL_PREPARED_STATEMENT_h
 #include "SharedDefines.h"
-#include "PreparedResultSet.h"
+#include "PreparedStatementHolder.h"
+#include <mutex>
 #endif /* !_PREPARED_STATEMENT_MYSQL_PREPARED_STATEMENT_h */
 
 namespace SteerStone
-{
+{ 
+    /// Used for bind index, easy readability
     enum Index
     {
         INDEX_0,
@@ -47,6 +49,9 @@ namespace SteerStone
     class MYSQLPreparedStatement
     {
     public:
+        friend class PreparedStatements;
+
+    public:
         /// Constructor
         MYSQLPreparedStatement();
 
@@ -68,55 +73,14 @@ namespace SteerStone
         /// PrepareStatement
         /// Prepare the statement
         /// @p_Query : Query which will be executed to database
-        void PrepareStatement(char const* p_Query);
-
-        /// Execute
-        /// Execute query
-        PreparedResultSet* Execute();
-
-    public:
-        /// Set our prepared values
-        void SetBool(uint8 p_Index, bool p_Value)          { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetUint8(uint8 p_Index, uint8 p_Value)        { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetUint16(uint8 p_Index, uint16 p_Value)      { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetUint32(uint8 p_Index, uint32 p_Value)      { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetUint64(uint8 p_Index, uint64 p_Value)      { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetInt8(uint8 p_Index, int8 p_Value)          { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetInt16(uint8 p_Index, int16 p_Value)        { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetInt32(uint8 p_Index, int32 p_Value)        { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetInt64(uint8 p_Index, int64 p_Value)        { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetFloat(uint8 p_Index, float p_Value)        { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetDouble(uint8 p_Index, double p_Value)      { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-        void SetString(uint8 p_Index, std::string p_Value) { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
-
-    private:
-        /// Prepare
-        /// Prepare the query
-        /// @p_Query : Query which will be executed to database
-        bool Prepare(char const* p_Query);
-
-        /// BindParameters
-        /// Bind parameters from storage into SQL
-        void BindParameters();
-
-        /// ExecuteStatement
-        /// Execute the statement to database
-        bool ExecuteStatement(MYSQL_RES** p_Result, MYSQL_FIELD** p_Fields, uint32* p_FieldCount);
-
-        /// RemoveBinds
-        /// Remove previous binds
-        void RemoveBinds();
+        bool Prepare(PreparedStatementHolder* p_StatementHolder);
 
     private:
         MYSQL* m_Connection;
-        MYSQL_STMT* m_Stmt;
-        MYSQL_BIND* m_Bind;
-        uint32 m_ParametersCount;
 
     private:
-        std::string m_Query;
-        std::vector<std::pair<uint8, SQLBindData>> m_Binds;
-        bool m_PrepareError;
+        PreparedStatementHolder* m_Statements[MAX_PREPARED_STATEMENTS];
+        std::mutex m_Mutex;
 
     private:
         static volatile bool s_Logged;

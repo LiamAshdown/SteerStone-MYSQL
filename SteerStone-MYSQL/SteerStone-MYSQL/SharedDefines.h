@@ -49,5 +49,6 @@ typedef std::uint16_t uint16;
 typedef std::uint8_t uint8;
 
 #define MIN_CONNECTION_POOL_SIZE 1
-#define MAX_CONNECTION_POOL_SIZE 100
+#define MAX_CONNECTION_POOL_SIZE 10 ///< Don't change this
+#define MAX_PREPARED_STATEMENTS 50 /// And don't change this
 #define MAX_QUERY_LENGTH  (32*1024)
