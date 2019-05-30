@@ -21,7 +21,7 @@
 namespace SteerStone
 {
     /// Constructor
-    Database::Database()
+    Database::Database() : m_DatabaseWorker(&m_OperatorQueue)
     {
     }
 
@@ -63,5 +63,27 @@ namespace SteerStone
     void Database::FreePrepareStatement(PreparedStatementHolder* p_PreparedStatement)
     {
         m_PreparedStatements.FreePrepareStatement(p_PreparedStatement);
+    }
+
+    /// PrepareOperator
+    /// Execute query on worker thread
+    /// @p_PrepareStatementHolder : PrepareStatement which will be executed on database worker thread
+    CallBackOperator Database::PrepareOperator(PreparedStatementHolder* p_PrepareStatementHolder)
+    {
+        /// PrepareStatement keeps reference of MYSQLConnection -- keep note
+        PrepareStatementOperator* l_PrepareStatementOperator = new PrepareStatementOperator(p_PrepareStatementHolder);
+
+        /// Keep reference of statement operator to execute query
+        EnqueueOperator(l_PrepareStatementOperator);
+
+        /// Return our CallBackOperator which gets the result from database worker thread
+        return CallBackOperator(std::move(l_PrepareStatementOperator->GetFuture()));
+    }
+
+    /// EnqueueOperator
+    /// @p_Operator : Operator we are adding to be processed on database worker thread
+    void Database::EnqueueOperator(Operator * p_Operator)
+    {
+        m_OperatorQueue.push(p_Operator);
     }
 } ///< NAMESPACE STEERSTONE

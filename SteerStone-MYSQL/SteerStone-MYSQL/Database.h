@@ -20,6 +20,7 @@
 #define _DATABASE_DATABASE_h
 #include "SharedDefines.h"
 #include "PreparedStatements.h"
+#include "DatabaseWorker.h"
 #include <mutex>
 #endif /* !_DATABASE_DATABASE_h */
 
@@ -55,6 +56,17 @@ namespace SteerStone
         /// @p_PreparedStatement : Connection we are freeing
         void FreePrepareStatement(PreparedStatementHolder* p_PreparedStatement);
 
+    public:
+        /// PrepareOperator
+        /// Execute query on worker thread
+        /// @p_PrepareStatementHolder : PrepareStatement which will be executed on database worker thread
+        CallBackOperator PrepareOperator(PreparedStatementHolder* p_PrepareStatementHolder);
+
+    private:
+        /// EnqueueOperator
+        /// @p_Operator : Operator we are adding to be processed on database worker thread
+        void EnqueueOperator(Operator* p_Operator);
+
     private:
         /// Database Variables
         std::string m_Username;
@@ -66,6 +78,8 @@ namespace SteerStone
 
     private:
         PreparedStatements m_PreparedStatements;
+        DatabaseWorker m_DatabaseWorker;
+        std::queue<Operator*> m_OperatorQueue;
     };
 }
 

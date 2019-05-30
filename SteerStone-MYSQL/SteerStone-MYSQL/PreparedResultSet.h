@@ -48,6 +48,10 @@ namespace SteerStone
         /// High Level
         bool GetNextRow();
 
+        /// GetRowCount
+        /// Get total row count
+        uint64 GetRowCount() const { return m_RowCount; }
+
     private:
         /// CleanUp
         /// Free Bind Memory

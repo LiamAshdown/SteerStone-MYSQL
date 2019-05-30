@@ -19,7 +19,7 @@
 #ifndef _PREPARED_STATEMENT_PREPARED_STATEMENT_HOLDER_h
 #define _PREPARED_STATEMENT_PREPARED_STATEMENT_HOLDER_h
 #include "SharedDefines.h"
-#include "PreparedResultSet.h"
+#include "OperatorProcessor.h"
 #include <mutex>
 #endif /* !_PREPARED_STATEMENT_PREPARED_STATEMENT_HOLDER_h */
 
