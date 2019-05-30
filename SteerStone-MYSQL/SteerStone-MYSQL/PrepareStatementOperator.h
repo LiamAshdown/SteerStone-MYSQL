@@ -26,14 +26,14 @@
 
 namespace SteerStone
 {
-    class PreparedStatementHolder;
+    class PreparedStatement;
 
     class PrepareStatementOperator : public Operator
     {
     public:
         /// Constructor
         /// @p_PrepareStatementHolder : Keep reference of statement to be accessed later
-        PrepareStatementOperator(PreparedStatementHolder* p_PreparedStatementHolder);
+        PrepareStatementOperator(PreparedStatement* p_PreparedStatementHolder);
 
         /// Deconstructor
         ~PrepareStatementOperator() override;
@@ -48,7 +48,7 @@ namespace SteerStone
         virtual bool Execute() override;
 
     private:
-        PreparedStatementHolder* m_PreparedStatementHolder;         ///< Holds query and stores result set if any
+        PreparedStatement* m_PreparedStatementHolder;         ///< Holds query and stores result set if any
         std::promise<PreparedResultSet*>* m_PromiseResultSet;       ///< Promise which the non database worker thread will hold, database worker thread holds the future
     };
 

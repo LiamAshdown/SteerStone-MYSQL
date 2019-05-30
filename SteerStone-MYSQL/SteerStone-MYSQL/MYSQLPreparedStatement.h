@@ -19,7 +19,7 @@
 #ifndef _PREPARED_STATEMENT_MYSQL_PREPARED_STATEMENT_h
 #define _PREPARED_STATEMENT_MYSQL_PREPARED_STATEMENT_h
 #include "SharedDefines.h"
-#include "PreparedStatementHolder.h"
+#include "PreparedStatement.h"
 #include <mutex>
 #endif /* !_PREPARED_STATEMENT_MYSQL_PREPARED_STATEMENT_h */
 
@@ -73,13 +73,13 @@ namespace SteerStone
         /// PrepareStatement
         /// Prepare the statement
         /// @p_Query : Query which will be executed to database
-        bool Prepare(PreparedStatementHolder* p_StatementHolder);
+        bool Prepare(PreparedStatement* p_StatementHolder);
 
     private:
         MYSQL* m_Connection;
 
     private:
-        PreparedStatementHolder* m_Statements[MAX_PREPARED_STATEMENTS];
+        PreparedStatement* m_Statements[MAX_PREPARED_STATEMENTS];
         std::mutex m_Mutex;
 
     private:

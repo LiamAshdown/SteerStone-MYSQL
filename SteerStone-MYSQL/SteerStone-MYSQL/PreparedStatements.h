@@ -48,11 +48,11 @@ namespace SteerStone
     public:
         /// GetPrepareStatement
         /// GetPrepareStatement a PrepareStatement
-        PreparedStatementHolder* GetPrepareStatement();
+        PreparedStatement* GetPrepareStatement();
 
         /// FreePrepareStatement
         /// Release Prepare statement to be used again
-        void FreePrepareStatement(PreparedStatementHolder* p_PrepareStatement);
+        void FreePrepareStatement(PreparedStatement* p_PrepareStatement);
 
     private:
         std::vector<MYSQLPreparedStatement*> m_Pool;

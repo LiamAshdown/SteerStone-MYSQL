@@ -55,7 +55,7 @@ namespace SteerStone
 
             /// Set up prepare statements
             for (uint32 l_I = 0; l_I < MAX_PREPARED_STATEMENTS; l_I++)
-                m_Statements[l_I] = new PreparedStatementHolder(this);
+                m_Statements[l_I] = new PreparedStatement(this);
 
             mysql_set_character_set(m_Connection, "utf8");
 
@@ -71,7 +71,7 @@ namespace SteerStone
 
     /// Prepare the statement
     /// @p_Query : Query which will be executed to database
-    bool MYSQLPreparedStatement::Prepare(PreparedStatementHolder* p_StatementHolder)
+    bool MYSQLPreparedStatement::Prepare(PreparedStatement* p_StatementHolder)
     {
         std::unique_lock<std::mutex> l_Guard(m_Mutex);
 

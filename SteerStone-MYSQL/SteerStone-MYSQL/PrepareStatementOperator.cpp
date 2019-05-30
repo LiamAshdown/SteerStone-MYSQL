@@ -16,13 +16,13 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "PreparedStatementHolder.h"
+#include "PreparedStatement.h"
 
 namespace SteerStone
 {
     /// Constructor
     /// @p_PrepareStatementHolder : Keep reference of statement to be accessed later
-    SteerStone::PrepareStatementOperator::PrepareStatementOperator(PreparedStatementHolder * p_PreparedStatementHolder) : m_PreparedStatementHolder(p_PreparedStatementHolder)
+    SteerStone::PrepareStatementOperator::PrepareStatementOperator(PreparedStatement * p_PreparedStatementHolder) : m_PreparedStatementHolder(p_PreparedStatementHolder)
     {
         m_PromiseResultSet = new std::promise<PreparedResultSet*>();
     }

@@ -49,18 +49,18 @@ namespace SteerStone
     public:
         /// GetPreparedStatement
         /// Returns a Prepare Statement from Pool
-        PreparedStatementHolder* GetPrepareStatement();
+        PreparedStatement* GetPrepareStatement();
 
         /// FreePrepareStatement
         /// Free Prepare Statement
         /// @p_PreparedStatement : Connection we are freeing
-        void FreePrepareStatement(PreparedStatementHolder* p_PreparedStatement);
+        void FreePrepareStatement(PreparedStatement* p_PreparedStatement);
 
     public:
         /// PrepareOperator
         /// Execute query on worker thread
         /// @p_PrepareStatementHolder : PrepareStatement which will be executed on database worker thread
-        CallBackOperator PrepareOperator(PreparedStatementHolder* p_PrepareStatementHolder);
+        CallBackOperator PrepareOperator(PreparedStatement* p_PrepareStatementHolder);
 
     private:
         /// EnqueueOperator

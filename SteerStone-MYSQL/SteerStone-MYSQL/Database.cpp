@@ -52,7 +52,7 @@ namespace SteerStone
 
     /// GetPreparedStatement
     /// Returns a Prepare Statement from Pool
-    PreparedStatementHolder* Database::GetPrepareStatement()
+    PreparedStatement* Database::GetPrepareStatement()
     {
        return m_PreparedStatements.GetPrepareStatement();
     }
@@ -60,7 +60,7 @@ namespace SteerStone
     /// FreePrepareStatement
     /// Free Prepare Statement
     /// @p_PreparedStatement : Connection we are freeing
-    void Database::FreePrepareStatement(PreparedStatementHolder* p_PreparedStatement)
+    void Database::FreePrepareStatement(PreparedStatement* p_PreparedStatement)
     {
         m_PreparedStatements.FreePrepareStatement(p_PreparedStatement);
     }
@@ -68,7 +68,7 @@ namespace SteerStone
     /// PrepareOperator
     /// Execute query on worker thread
     /// @p_PrepareStatementHolder : PrepareStatement which will be executed on database worker thread
-    CallBackOperator Database::PrepareOperator(PreparedStatementHolder* p_PrepareStatementHolder)
+    CallBackOperator Database::PrepareOperator(PreparedStatement* p_PrepareStatementHolder)
     {
         /// PrepareStatement keeps reference of MYSQLConnection -- keep note
         PrepareStatementOperator* l_PrepareStatementOperator = new PrepareStatementOperator(p_PrepareStatementHolder);

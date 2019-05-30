@@ -60,7 +60,7 @@ namespace SteerStone
 
     /// GetPrepareStatement
     /// GetPrepareStatement a PrepareStatement
-    PreparedStatementHolder * PreparedStatements::GetPrepareStatement()
+    PreparedStatement * PreparedStatements::GetPrepareStatement()
     {
         std::unique_lock<std::mutex> l_Guard(m_Mutex);
 
@@ -70,7 +70,7 @@ namespace SteerStone
 
             for (uint32 l_I = 0; l_I < MAX_PREPARED_STATEMENTS; l_I++)
             {
-                PreparedStatementHolder* l_PreparedStatementHolder = l_PreparedStatement->m_Statements[l_I];
+                PreparedStatement* l_PreparedStatementHolder = l_PreparedStatement->m_Statements[l_I];
 
                 if (l_PreparedStatementHolder->TryLock())
                     return l_PreparedStatementHolder;
@@ -86,7 +86,7 @@ namespace SteerStone
 
     /// FreePrepareStatement
     /// Release Prepare statement to be used again
-    void PreparedStatements::FreePrepareStatement(PreparedStatementHolder* p_PrepareStatement)
+    void PreparedStatements::FreePrepareStatement(PreparedStatement* p_PrepareStatement)
     {
         std::unique_lock<std::mutex> l_Guard(m_Mutex);
 

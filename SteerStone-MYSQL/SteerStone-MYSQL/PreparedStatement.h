@@ -27,7 +27,7 @@ namespace SteerStone
 {
     class MYSQLPreparedStatement;
 
-    class PreparedStatementHolder
+    class PreparedStatement
     {
     public:
         friend class MYSQLPreparedStatement;
@@ -35,10 +35,10 @@ namespace SteerStone
     public:
         /// Constructor
         /// @p_MYSQLPreparedStatement : Keep reference of our connection
-        PreparedStatementHolder(MYSQLPreparedStatement* p_MySQLPreparedStatement);
+        PreparedStatement(MYSQLPreparedStatement* p_MySQLPreparedStatement);
 
         /// Deconstructor
-        ~PreparedStatementHolder();
+        ~PreparedStatement();
 
     public:
         /// TryLock

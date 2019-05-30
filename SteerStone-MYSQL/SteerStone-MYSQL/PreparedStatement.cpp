@@ -22,32 +22,32 @@ namespace SteerStone
 {
     /// Constructor
     /// @p_MYSQLPreparedStatement : Keep reference of our connection
-    PreparedStatementHolder::PreparedStatementHolder(MYSQLPreparedStatement* p_MySQLPreparedStatement) : m_MySQLPreparedStatement(p_MySQLPreparedStatement)
+    PreparedStatement::PreparedStatement(MYSQLPreparedStatement* p_MySQLPreparedStatement) : m_MySQLPreparedStatement(p_MySQLPreparedStatement)
     {
     }
 
     /// Deconstructor
-    PreparedStatementHolder::~PreparedStatementHolder()
+    PreparedStatement::~PreparedStatement()
     {
     }
 
     /// TryLock
     /// Attempt to lock the object
-    bool PreparedStatementHolder::TryLock()
+    bool PreparedStatement::TryLock()
     {
         return m_Mutex.try_lock();
     }
 
     /// Unlock
     /// Allow the prepare statement to be accessed again
-    void PreparedStatementHolder::Unlock()
+    void PreparedStatement::Unlock()
     {
         m_Mutex.unlock();
     }
 
     /// Prepare the statement
     /// @p_Query : Query which will be executed to database
-    void PreparedStatementHolder::PrepareStatement(char const * p_Query)
+    void PreparedStatement::PrepareStatement(char const * p_Query)
     {
         if (!Prepare(p_Query))
         {
@@ -58,7 +58,7 @@ namespace SteerStone
 
     /// ExecuteStatement
     /// Execute the statement
-    PreparedResultSet* PreparedStatementHolder::ExecuteStatement()
+    PreparedResultSet* PreparedStatement::ExecuteStatement()
     {
         if (m_PrepareError)
             return nullptr;
@@ -76,7 +76,7 @@ namespace SteerStone
     /// Prepare
     /// Prepare the query
     /// @p_Query : Query which will be executed to database
-    bool PreparedStatementHolder::Prepare(char const * p_Query)
+    bool PreparedStatement::Prepare(char const * p_Query)
     {
         /// Remove previous binds
         RemoveBinds();
@@ -89,7 +89,7 @@ namespace SteerStone
     /// @p_Result : Result set
     /// @p_Fields : Fields
     /// @p_FieldCount : How many columns
-    bool PreparedStatementHolder::Execute(MYSQL_RES ** p_Result, MYSQL_FIELD ** p_Fields, uint32 * p_FieldCount)
+    bool PreparedStatement::Execute(MYSQL_RES ** p_Result, MYSQL_FIELD ** p_Fields, uint32 * p_FieldCount)
     {
         BindParameters();
 
@@ -116,7 +116,7 @@ namespace SteerStone
 
     /// BindParameters
     /// Bind parameters from storage into SQL
-    void PreparedStatementHolder::BindParameters()
+    void PreparedStatement::BindParameters()
     {
         for (auto l_Itr = m_Binds.cbegin(); l_Itr != m_Binds.cend(); l_Itr++)
         {
@@ -136,7 +136,7 @@ namespace SteerStone
 
     /// RemoveBinds
     /// Remove previous binds
-    void PreparedStatementHolder::RemoveBinds()
+    void PreparedStatement::RemoveBinds()
     {
         if (!m_Stmt)
             return;
