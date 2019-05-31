@@ -16,12 +16,13 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "PreparedResultSet.h"
+#include "PreparedStatement.h"
 #include "SQLCommon.h"
 
 namespace SteerStone
 {
     /// Constructor
+    /// @p_PrepareStatement : Reference of prepare statement, we need this to free the prepare statement
     /// @p_Stmt : Prepare Statement
     /// @p_Result : Result
     /// @p_Fields : Field result
@@ -126,9 +127,7 @@ namespace SteerStone
     }
 
     /// Deconstructor
-    PreparedResultSet::~PreparedResultSet()
-    {
-    }
+    PreparedResultSet::~PreparedResultSet() {}
 
     /// FetchResult
     /// Return result

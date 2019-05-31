@@ -47,6 +47,11 @@ namespace SteerStone
             uint32 const p_Port, std::string const p_Host, std::string const p_Database, uint32 const p_PoolSize);
 
     public:
+        /// ShutDown
+        /// Shutdown all connections
+        void ShutDown();
+
+    public:
         /// GetPreparedStatement
         /// Returns a Prepare Statement from Pool
         PreparedStatement* GetPrepareStatement();
@@ -67,6 +72,10 @@ namespace SteerStone
         /// @p_Operator : Operator we are adding to be processed on database worker thread
         void EnqueueOperator(Operator* p_Operator);
 
+        /// CloseConnections
+        /// Close all MySQL connections
+        void CloseConnections();
+
     private:
         /// Database Variables
         std::string m_Username;
@@ -79,7 +88,6 @@ namespace SteerStone
     private:
         PreparedStatements m_PreparedStatements;
         DatabaseWorker m_DatabaseWorker;
-        std::queue<Operator*> m_OperatorQueue;
     };
 }
 

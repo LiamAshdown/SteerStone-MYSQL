@@ -4,8 +4,7 @@
 namespace SteerStone
 {
     /// Constructor
-    DatabaseWorker::DatabaseWorker(std::queue<Operator*>* p_Queue) :
-        m_Queue(p_Queue)
+    DatabaseWorker::DatabaseWorker()
     {
         m_WorkerThread = std::thread(&DatabaseWorker::WorkerThread, this);
     }
@@ -13,6 +12,8 @@ namespace SteerStone
     /// Deconstructor
     DatabaseWorker::~DatabaseWorker()
     {
+        m_Queue.ShutDown();
+        m_WorkerThread.join();
     }
 
     /// WorkerThread
@@ -21,12 +22,12 @@ namespace SteerStone
     {
         while (true)
         {
-            if (m_Queue->size() > 0)
-            {
-                Operator* l_Operator = m_Queue->front();
-                l_Operator->Execute();
+            Operator* l_Operator = nullptr;
+            m_Queue.Pop(l_Operator);
 
-                m_Queue->pop();
+            if (l_Operator)
+            {
+                l_Operator->Execute();
 
                 delete l_Operator;
             }

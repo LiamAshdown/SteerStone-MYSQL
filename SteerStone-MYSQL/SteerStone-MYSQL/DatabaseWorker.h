@@ -19,6 +19,7 @@
 #ifndef _DATABASE_DATABASE_WORKER_h
 #define _DATABASE_DATABASE_WORKER_h
 #include "SharedDefines.h"
+#include "ProducerQueue.h"
 #include <thread>
 #endif /* !_DATABASE_DATABASE_WORKER_h */
 
@@ -29,8 +30,11 @@ namespace SteerStone
     class DatabaseWorker
     {
     public:
+        friend class Database;
+
+    public:
         /// Constructor
-        DatabaseWorker(std::queue<Operator*>* p_Queue);
+        DatabaseWorker();
 
         /// Deconstructor
         ~DatabaseWorker();
@@ -41,7 +45,7 @@ namespace SteerStone
         void WorkerThread();
 
     private:
-        std::queue<Operator*>* m_Queue;
+        ProducerQueue<Operator*> m_Queue;
         std::thread m_WorkerThread;
     };
 

@@ -21,9 +21,7 @@
 namespace SteerStone
 {
     /// Constructor
-    Database::Database() : m_DatabaseWorker(&m_OperatorQueue)
-    {
-    }
+    Database::Database() {}
 
     /// Deconstructor
     Database::~Database()
@@ -47,7 +45,15 @@ namespace SteerStone
         else
             m_PoolSize = p_PoolSize;
 
-        m_PreparedStatements.SetUp(p_Username, p_Password, p_Port, p_Host, p_Database, p_PoolSize);
+        m_PreparedStatements.SetUp(p_Username, p_Password, p_Port, p_Host, p_Database, p_PoolSize, *this);
+    }
+
+    /// ShutDown
+    /// Shutdown all connections
+    void Database::ShutDown()
+    {
+        m_DatabaseWorker.m_Queue.ShutDown();
+        CloseConnections();
     }
 
     /// GetPreparedStatement
@@ -84,6 +90,13 @@ namespace SteerStone
     /// @p_Operator : Operator we are adding to be processed on database worker thread
     void Database::EnqueueOperator(Operator * p_Operator)
     {
-        m_OperatorQueue.push(p_Operator);
+        m_DatabaseWorker.m_Queue.Push(p_Operator);
+    }
+
+    /// CloseConnections
+    /// Close all MySQL connections
+    void Database::CloseConnections()
+    {
+        m_PreparedStatements.ClosePrepareStatements();
     }
 } ///< NAMESPACE STEERSTONE

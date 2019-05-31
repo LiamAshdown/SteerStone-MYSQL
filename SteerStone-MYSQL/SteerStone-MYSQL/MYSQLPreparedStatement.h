@@ -46,6 +46,8 @@ namespace SteerStone
         INDEX_15,
     };
 
+    class Database;
+
     class MYSQLPreparedStatement
     {
     public:
@@ -53,7 +55,8 @@ namespace SteerStone
 
     public:
         /// Constructor
-        MYSQLPreparedStatement();
+        /// @p_Database : Keep reference of database
+        MYSQLPreparedStatement(Database& p_Database);
 
         /// Constructor
         ~MYSQLPreparedStatement();
@@ -65,7 +68,6 @@ namespace SteerStone
         /// @p_Port     : Port we are connecting to
         /// @p_Host     : Address we are connecting to
         /// @p_Database : Database we are querying to
-        /// @p_PoolSize : Amount of MYSQL connections we are spawning
         uint32 Connect(std::string const p_Username, std::string const p_Password,
             uint32 const p_Port, std::string const p_Host, std::string const p_Database);
 
@@ -80,6 +82,7 @@ namespace SteerStone
 
     private:
         PreparedStatement* m_Statements[MAX_PREPARED_STATEMENTS];
+        Database& m_Database;
         std::mutex m_Mutex;
 
     private:

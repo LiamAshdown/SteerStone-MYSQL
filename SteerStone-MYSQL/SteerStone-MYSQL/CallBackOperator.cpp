@@ -21,13 +21,19 @@
 namespace SteerStone
 {
     /// Constructor
-    CallBackOperator::CallBackOperator(std::future<PreparedResultSet*> p_FuturePreparedResultSet) : m_PreparedFuture(std::move(p_FuturePreparedResultSet))
+    CallBackOperator::CallBackOperator(std::future<PreparedResultSet*> p_PreparedFuture) : m_PreparedFuture(std::move(p_PreparedFuture)), m_OperatorFunction(nullptr)
     {
     }
 
     /// Deconstructor
     CallBackOperator::~CallBackOperator()
     {
+    }
+
+    CallBackOperator&& CallBackOperator::AddFunction(std::function<void(PreparedResultSet*)>&& p_CallBack)
+    {
+        m_OperatorFunction = std::move(p_CallBack);
+        return std::move(*this);
     }
 
     /// InvokeOperator
@@ -38,11 +44,13 @@ namespace SteerStone
         if (m_PreparedFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
         {
             PreparedResultSet* l_PreparedResultSet = m_PreparedFuture.get();
-            do
-            {
-                ResultSet* l_Result = l_PreparedResultSet->FetchResult();
-                LOG_INFO << l_Result[0].GetUInt32() << " " << l_Result[1].GetUInt32();
-            } while (l_PreparedResultSet->GetNextRow());
+
+            /// If there's a function, then execute the function with our result set
+            if (m_OperatorFunction)
+                m_OperatorFunction(l_PreparedResultSet);
+
+            delete l_PreparedResultSet;
+
             return true;
         }
         return false;
