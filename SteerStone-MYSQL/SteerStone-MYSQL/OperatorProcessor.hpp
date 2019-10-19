@@ -16,17 +16,22 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CALL_BACK_PROCESSOR_h
-#define _CALL_BACK_PROCESSOR_h
-#include "SharedDefines.h"
-#include "CallBackOperator.h"
-#endif /* !_CALL_BACK_PROCESSOR_h */
+#pragma once
+#include <PCH/Precompiled.hpp>
+#include "Core/Core.hpp"
 
-namespace SteerStone
-{
+#include "Database/CallBackOperator.hpp"
+
+namespace SteerStone { namespace Core { namespace Database {
+
     /// Stores the operators and calls the operator once query is done on database thread worker function
     class OperatorProcessor
     {
+        DISALLOW_COPY_AND_ASSIGN(OperatorProcessor);
+
+        //////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////
+
     public:
         /// Constructor
         OperatorProcessor();
@@ -34,10 +39,8 @@ namespace SteerStone
         /// Deconstructor
         ~OperatorProcessor();
 
-    public:
-        /// This class should never be copied
-        OperatorProcessor(OperatorProcessor const& p_Right) = delete;
-        OperatorProcessor& operator=(OperatorProcessor const& p_Right) = delete;
+        //////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////
 
     public:
         /// AddOperator
@@ -48,7 +51,13 @@ namespace SteerStone
         /// Process any operators which are not pending
         void ProcessOperators();
 
+        //////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////
+
     private:
         std::vector<CallBackOperator> m_Operators; ///< Holds the operators
     };
-} ///< NAMESPACE STEERSTONE
+
+}   ///< namespace Database
+}   ///< namespace Core
+}   ///< namespace SteerStone

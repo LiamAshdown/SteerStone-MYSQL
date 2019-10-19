@@ -17,8 +17,9 @@
 */
 
 #pragma once
-#include "SharedDefines.h"
-#include <field_types.h>
+#include <PCH/Precompiled.hpp>
+
+#include "Logger/Base.hpp"
 
 static uint32 SizeForType(MYSQL_FIELD* p_Field)
 {
@@ -55,7 +56,12 @@ static uint32 SizeForType(MYSQL_FIELD* p_Field)
     case MYSQL_TYPE_NEWDECIMAL:
         return 64;
     default:
-        LOG_ERROR << ("SQL::SizeForType(): invalid field type %u", uint32(p_Field->type));
+        LOG_ERROR("Database", "invalid field type %0", uint32(p_Field->type));
         return 0;
     }
 }
+
+#define MIN_CONNECTION_POOL_SIZE 1
+#define MAX_CONNECTION_POOL_SIZE 5
+#define MAX_PREPARED_STATEMENTS 10
+#define MAX_QUERY_LENGTH  (32*1024)

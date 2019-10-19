@@ -16,119 +16,86 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Database.h"
+#include "Database/Database.hpp"
+#include "Logger/Base.hpp"
+#include "SQLCommon.hpp"
 
-namespace SteerStone
-{
+namespace SteerStone { namespace Core { namespace Database {
+
     /// Constructor
-    PreparedStatements::PreparedStatements() : m_ShutDown(false)
+    PreparedStatements::PreparedStatements()
     {
     }
-
     /// Deconstructor
     PreparedStatements::~PreparedStatements()
     {
     }
 
-    /// SetUp
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+
     /// @p_Username : Name of user
     /// @p_Password : Password of user
     /// @p_Port     : Port we are connecting to
     /// @p_Host     : Address we are connecting to
     /// @p_Database : Database we are querying to
     /// @p_PoolSize : Amount of MYSQL connections we are spawning
-    /// @p_DatabaseHolder : Reference of database
-    uint32 SteerStone::PreparedStatements::SetUp(std::string const p_Username, std::string const p_Password, uint32 const p_Port, std::string const p_Host, 
-        std::string const p_Database, uint32 const p_PoolSize, Database& p_DatabaseHolder)
+    /// @p_Base     : Database
+    uint32 PreparedStatements::Connect(std::string const p_Username, std::string const p_Password, uint32 const p_Port, std::string const p_Host, 
+        std::string const p_Database, uint32 const p_PoolSize, Base* p_Base)
     {
         for (uint32 l_I = 0; l_I < p_PoolSize; l_I++)
         {
-            MYSQLPreparedStatement* l_PreparedStatement = new MYSQLPreparedStatement(p_DatabaseHolder);
+            std::shared_ptr<MYSQLPreparedStatement> l_PreparedStatement = std::make_shared<MYSQLPreparedStatement>(p_Base);
 
             uint32 l_Success = l_PreparedStatement->Connect(p_Username, p_Password, p_Port, p_Host, p_Database);
             
             /// If > 0 - Failed to connect
             if (l_Success)
             {
-                LOG_ERROR << "Failed to create connection. MySQL Error: " << l_Success << ". Please refer to MYSQL Documentation.";
+                LOG_ERROR("Database", "Failed to create connection. MySQL Error: %0. Please refer to MYSQL Documentation.", l_Success);
                 return l_Success;
             }
 
-            m_Pool.push_back(l_PreparedStatement);
+            m_ConnectionPool.push_back(l_PreparedStatement);
         }
 
         return 0;
     }
 
-    /// ClosePrepareStatements
-    /// Close all prepare statements
-    void PreparedStatements::ClosePrepareStatements()
+    /// Attempt to get a Prepared Statement
+    PreparedStatement * PreparedStatements::Prepare()
     {
-        std::unique_lock<std::mutex> l_Guard(m_Mutex);
-
-        /// Prevent other threads from accessing prepare statements
-        m_ShutDown = true;
-
-        for (auto l_Itr = m_Pool.begin(); l_Itr != m_Pool.end();)
+        for(;;)
         {
-            MYSQLPreparedStatement* l_PreparedStatement = *l_Itr;
-
-            for (uint32 l_I = 0; l_I < MAX_PREPARED_STATEMENTS; l_I++)
+            for (auto l_Itr : m_ConnectionPool)
             {
-                PreparedStatement* l_PrepareStatement = l_PreparedStatement->m_Statements[l_I];
+                std::shared_ptr<MYSQLPreparedStatement> l_PreparedStatement = l_Itr;
 
-                if (l_PreparedStatement)
-                    delete l_PrepareStatement;
+                for (uint32 l_I = 0; l_I < MAX_PREPARED_STATEMENTS; l_I++)
+                {
+                    PreparedStatement* l_PrepareStatement = l_PreparedStatement->m_Statements[l_I];
+
+                    if (l_PrepareStatement->TryLockMutex())
+                        return l_PrepareStatement;
+                }
             }
 
-            delete l_PreparedStatement;
-            l_Itr = m_Pool.erase(l_Itr);
+            LOG_WARNING("PreparedStatements", "Could not get a prepare statement... trying again!");
         }
-    }
-
-    /// GetPrepareStatement
-    /// GetPrepareStatement a PrepareStatement
-    PreparedStatement * PreparedStatements::GetPrepareStatement()
-    {
-        std::unique_lock<std::mutex> l_Guard(m_Mutex);
-
-        /// Do not get a prepared statement if we are in a process of shutting down
-        if (m_ShutDown)
-            return nullptr;
-
-        for (auto const& l_Itr : m_Pool)
-        {
-            MYSQLPreparedStatement* l_PreparedStatement = l_Itr;
-
-            for (uint32 l_I = 0; l_I < MAX_PREPARED_STATEMENTS; l_I++)
-            {
-                PreparedStatement* l_PreparedStatementHolder = l_PreparedStatement->m_Statements[l_I];
-
-                if (l_PreparedStatementHolder->TryLock())
-                    return l_PreparedStatementHolder;
-            }
-        }
-
-        /// If we get here then there's a design logic flaw, it should be impossible for all statements to be used
-        /// unless we are running with thousands of players querying at same time which is unlikely
-        throw std::runtime_error("GetPrepareStatement: Could not get a prepare statement. All statements are taken.");
 
         return nullptr;
     }
-
-    /// FreePrepareStatement
     /// Release Prepare statement to be used again
-    void PreparedStatements::FreePrepareStatement(PreparedStatement* p_PrepareStatement)
+    void PreparedStatements::Free(PreparedStatement* p_PrepareStatement)
     {
-        std::unique_lock<std::mutex> l_Guard(m_Mutex);
-
-        if (m_ShutDown)
-            return;
-
         /// Statement must be locked - if not something went wrong and we must investigate
-        assert(!p_PrepareStatement->TryLock());
+        LOG_ASSERT(!p_PrepareStatement->TryLockMutex(), "PreparedStatements", "Attempted to free a statement but it's already locked!");
 
-        if (!p_PrepareStatement->TryLock())
-            p_PrepareStatement->Unlock();
+        if (!p_PrepareStatement->TryLockMutex())
+            p_PrepareStatement->UnlockMutex();
     }
-} ///< NAMESPACE STEERSTONE
+
+}   ///< namespace Database
+}   ///< namespace Core
+}   ///< namespace SteerStone

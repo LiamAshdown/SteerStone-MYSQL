@@ -16,14 +16,14 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _DATABASE_SQL_BIND_DATA_h
-#define _DATABASE_SQL_BIND_DATA_h
-#include "SharedDefines.h"
+#pragma once
+#include <PCH/Precompiled.hpp>
 #include <mysql.h>
-#endif /* !_DATABASE_SQL_BIND_DATA_h */
 
-namespace SteerStone
-{
+#include "Core/Core.hpp"
+
+namespace SteerStone { namespace Core { namespace Database { 
+
     enum FieldType
     {
         FIELD_BOOL,
@@ -136,4 +136,7 @@ namespace SteerStone
         DataType m_BinaryData;
         std::string m_StringData;
     };
-} ///< NAMESPACE STEERSTONE
+
+}   ///< namespace Database
+}   ///< namespace Core
+}   ///< namespace SteerStone

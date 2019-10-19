@@ -16,12 +16,11 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _DATABASE_DATABASE_TYPE_h
-#define _DATABASE_DATABASE_TYPE_h
-#include "SharedDefines.h"
-#include "Database.h"
-#endif /* !_DATABASE_DATABASE_TYPE_h */
+#pragma once
 
-typedef SteerStone::Database DatabaseType;
+#include <PCH/Precompiled.hpp>
+#include "Database/Database.hpp"
 
-extern DatabaseType RoomDatabase;
+typedef SteerStone::Core::Database::Base DatabaseType;
+
+extern DatabaseType GameDatabase;

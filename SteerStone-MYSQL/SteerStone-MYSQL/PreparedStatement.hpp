@@ -16,51 +16,55 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _PREPARED_STATEMENT_PREPARED_STATEMENT_HOLDER_h
-#define _PREPARED_STATEMENT_PREPARED_STATEMENT_HOLDER_h
-#include "SharedDefines.h"
-#include "OperatorProcessor.h"
-#include <mutex>
-#endif /* !_PREPARED_STATEMENT_PREPARED_STATEMENT_HOLDER_h */
+#pragma once
+#include <PCH/Precompiled.hpp>
+#include "Core/Core.hpp"
 
-namespace SteerStone
-{
+#include "Database/OperatorProcessor.hpp"
+#include <mutex>
+#include <atomic>
+
+namespace SteerStone { namespace Core { namespace Database {
+
     class MYSQLPreparedStatement;
 
     class PreparedStatement
     {
-    public:
         friend class MYSQLPreparedStatement;
 
     public:
         /// Constructor
-        /// @p_MYSQLPreparedStatement : Keep reference of our connection
-        PreparedStatement(MYSQLPreparedStatement* p_MySQLPreparedStatement);
+        /// @p_MYSQLPreparedStatement : Reference
+        PreparedStatement(std::shared_ptr<MYSQLPreparedStatement> p_MySQLPreparedStatement);
 
         /// Deconstructor
         ~PreparedStatement();
 
-    public:
-        /// TryLock
-        /// Attempt to lock the object
-        bool TryLock();
+        //////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////
 
-        /// Unlock
-        /// Allow the prepare statement to be accessed again
-        void Unlock();
+        /// Attempt to lock
+        bool TryLockMutex();
+        /// Allow to be accessed
+        void UnlockMutex();
 
-    public:
         /// Prepare the statement
         /// @p_Query : Query which will be executed to database
         void PrepareStatement(char const* p_Query);
-
         /// ExecuteStatement
         /// Execute the statement
-        PreparedResultSet* ExecuteStatement();
+        /// @p_FreeStatementAutomatically : Free the prepared statement when PreparedResultSet deconstructors
+        std::unique_ptr<PreparedResultSet> ExecuteStatement(bool p_FreeStatementAutomatically = true);
+        
+        /// Clear Prepared Statements
+        /// @p_FreePrepareStatement : Free the prepare statement
+        void Clear(bool p_FreePrepareStatment);
 
-    public:
+        /// Return statement
+        MYSQL_STMT* GetStatement();
+
         /// Set our prepared values
-        void SetBool(uint8 p_Index, bool p_Value)          { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
+        void SetBool(uint8 p_Index, uint8 p_Value)         { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
         void SetUint8(uint8 p_Index, uint8 p_Value)        { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
         void SetUint16(uint8 p_Index, uint16 p_Value)      { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
         void SetUint32(uint8 p_Index, uint32 p_Value)      { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
@@ -74,16 +78,9 @@ namespace SteerStone
         void SetString(uint8 p_Index, std::string p_Value) { m_Binds.push_back(std::make_pair(p_Index, SQLBindData(p_Value))); }
 
     private:
-        /// Prepare
         /// Prepare the query
         /// @p_Query : Query which will be executed to database
         bool Prepare(char const * p_Query);
-
-        /// Execute
-        /// @p_Result : Result set
-        /// @p_Fields : Fields
-        /// @p_FieldCount : How many columns
-        bool Execute(MYSQL_RES** p_Result, MYSQL_FIELD** p_Fields, uint32* p_FieldCount);
 
         /// BindParameters
         /// Bind parameters from storage into SQL
@@ -94,16 +91,17 @@ namespace SteerStone
         void RemoveBinds();
 
     private:
-        MYSQLPreparedStatement* m_MySQLPreparedStatement;
-
-    private:
         MYSQL_STMT* m_Stmt;
         MYSQL_BIND* m_Bind;
+        std::shared_ptr<MYSQLPreparedStatement> m_MYSQLPreparedStatement;
         uint32 m_ParametersCount;
         std::string m_Query;
         bool m_PrepareError;
+        bool m_Prepared;
         std::vector<std::pair<uint8, SQLBindData>> m_Binds;
-        std::mutex m_Mutex; ///< We use this to prevent other uses trying to access a already accessed object
+        std::mutex m_Mutex;
     };
 
-} ///< NAMESPACE STEERSTONE
+}   ///< namespace Database
+}   ///< namespace Core
+}   ///< namespace SteerStone

@@ -16,17 +16,16 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "PreparedStatement.h"
+#include "Database/PreparedStatement.hpp"
 
-namespace SteerStone
-{
+namespace SteerStone { namespace Core { namespace Database {
+
     /// Constructor
     /// @p_PrepareStatementHolder : Keep reference of statement to be accessed later
-    SteerStone::PrepareStatementOperator::PrepareStatementOperator(PreparedStatement * p_PreparedStatementHolder) : m_PreparedStatementHolder(p_PreparedStatementHolder)
+    PrepareStatementOperator::PrepareStatementOperator(PreparedStatement * p_PreparedStatementHolder) : m_PreparedStatementHolder(p_PreparedStatementHolder)
     {
-        m_PromiseResultSet = new std::promise<PreparedResultSet*>();
+        m_PromiseResultSet = new std::promise<std::unique_ptr<PreparedResultSet>>();
     }
-
     /// Deconstructor
     PrepareStatementOperator::~PrepareStatementOperator()
     {
@@ -35,28 +34,24 @@ namespace SteerStone
             delete m_PromiseResultSet;
     }
 
-    /// GetFuture
-    /// GetFuture set
-    std::future<PreparedResultSet*> PrepareStatementOperator::GetFuture()
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+
+    /// Get Future set
+    std::future<std::unique_ptr<PreparedResultSet>> PrepareStatementOperator::GetFuture()
     {
         return m_PromiseResultSet->get_future();
     }
-
-    /// Execute
     /// Execute Query
     bool PrepareStatementOperator::Execute()
     {
-        PreparedResultSet* l_PreparedResultSet = m_PreparedStatementHolder->ExecuteStatement();
+        std::unique_ptr<PreparedResultSet> l_PreparedResultSet = m_PreparedStatementHolder->ExecuteStatement(false);
 
-        if (!l_PreparedResultSet || !l_PreparedResultSet->GetRowCount())
-        {
-            delete l_PreparedResultSet;
-            m_PromiseResultSet->set_value(nullptr);
-        }
-        else
-            m_PromiseResultSet->set_value(m_PreparedStatementHolder->ExecuteStatement());
+        m_PromiseResultSet->set_value(std::move(l_PreparedResultSet));
 
         return true;
     }
 
-} ///< NAMESPACE STEERSTONE
+}   ///< namespace Database
+}   ///< namespace Core
+}   ///< namespace SteerStone

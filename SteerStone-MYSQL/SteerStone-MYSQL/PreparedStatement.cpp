@@ -16,109 +16,127 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "MYSQLPreparedStatement.h"
+#include "Database/MYSQLPreparedStatement.hpp"
+#include "Database.hpp"
+#include "Database/SQLCommon.hpp"
+#include "Logger/LogDefines.hpp"
 
-namespace SteerStone
-{
+namespace SteerStone { namespace Core { namespace Database {
+
     /// Constructor
-    /// @p_MYSQLPreparedStatement : Keep reference of our connection
-    PreparedStatement::PreparedStatement(MYSQLPreparedStatement* p_MySQLPreparedStatement) : m_MySQLPreparedStatement(p_MySQLPreparedStatement)
+    /// @p_MYSQLPreparedStatement : Reference
+    PreparedStatement::PreparedStatement(std::shared_ptr<MYSQLPreparedStatement> p_MySQLPreparedStatement) 
+        : m_MYSQLPreparedStatement(p_MySQLPreparedStatement), m_Stmt(nullptr), m_Bind(nullptr), m_PrepareError(false), m_Prepared(false), m_ParametersCount(0)
     {
+        #ifdef STEERSTONE_CORE_DEBUG
+            LOG_INFO("PreparedStatement", "PreparedStatement initialized!");
+        #endif
     }
 
     /// Deconstructor
     PreparedStatement::~PreparedStatement()
     {
+        RemoveBinds();
     }
 
-    /// TryLock
-    /// Attempt to lock the object
-    bool PreparedStatement::TryLock()
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+
+    /// Attempt to lock
+    bool PreparedStatement::TryLockMutex()
     {
         return m_Mutex.try_lock();
     }
-
-    /// Unlock
-    /// Allow the prepare statement to be accessed again
-    void PreparedStatement::Unlock()
+    /// Allow to be accessed
+    void PreparedStatement::UnlockMutex()
     {
         m_Mutex.unlock();
     }
 
     /// Prepare the statement
     /// @p_Query : Query which will be executed to database
-    void PreparedStatement::PrepareStatement(char const * p_Query)
+    void PreparedStatement::PrepareStatement(char const* p_Query)
     {
-        if (!Prepare(p_Query))
+        if (Prepare(p_Query))
         {
             m_PrepareError = true;
-            LOG_ERROR << "Failed in Preparing Statement!";
+
+            LOG_ASSERT(false, "Database", "Failed in Preparing Statement!");
         }
     }
-
     /// ExecuteStatement
     /// Execute the statement
-    PreparedResultSet* PreparedStatement::ExecuteStatement()
+    /// @p_FreeStatementAutomatically : Free the prepared statement when PreparedResultSet deconstructors
+    std::unique_ptr<PreparedResultSet> PreparedStatement::ExecuteStatement(bool p_FreeStatementAutomatically)
     {
         if (m_PrepareError)
             return nullptr;
-
+            
         MYSQL_RES* l_Result = nullptr;
-        MYSQL_FIELD* l_Fields = nullptr;
         uint32 l_FieldCount = 0;
 
-        if (!Execute(&l_Result, &l_Fields, &l_FieldCount))
-            return nullptr;
-
-        return new PreparedResultSet(m_Stmt, l_Result, l_Fields, l_FieldCount);
-    }
-
-    /// Prepare
-    /// Prepare the query
-    /// @p_Query : Query which will be executed to database
-    bool PreparedStatement::Prepare(char const * p_Query)
-    {
-        /// Remove previous binds
-        RemoveBinds();
-        m_Query = p_Query;
-
-        return m_MySQLPreparedStatement->Prepare(this);
-    }
-
-    /// Execute
-    /// @p_Result : Result set
-    /// @p_Fields : Fields
-    /// @p_FieldCount : How many columns
-    bool PreparedStatement::Execute(MYSQL_RES ** p_Result, MYSQL_FIELD ** p_Fields, uint32 * p_FieldCount)
-    {
         BindParameters();
 
-        if (mysql_stmt_execute(m_Stmt))
+        if (m_MYSQLPreparedStatement->Execute(m_Stmt, &l_Result, &l_FieldCount))
         {
-            LOG_ERROR << "mysql_stmt_execute: " << mysql_stmt_error(m_Stmt);
-            RemoveBinds();
-            return false;
+            std::unique_ptr<PreparedResultSet> l_PreparedResultSet = std::make_unique<PreparedResultSet>(this, l_Result, l_FieldCount, p_FreeStatementAutomatically);
+
+            if (l_PreparedResultSet && l_PreparedResultSet->GetRowCount())
+                return std::move(l_PreparedResultSet);
         }
 
-        *p_Result = mysql_stmt_result_metadata(m_Stmt);
-        *p_FieldCount = mysql_stmt_field_count(m_Stmt);
+        return nullptr;
+    }
 
-        if (!*p_Result)
+    /// Clear Prepare Statement
+    /// @p_FreePrepareStatement : Free the prepare statement
+    void PreparedStatement::Clear(bool p_FreePrepareStatment)
+    {
+        if (m_Stmt->bind_result_done)
         {
-            mysql_free_result(*p_Result);
-            return false;
+            if (m_Stmt->bind->length)
+                delete m_Stmt->bind->length;
+            if( m_Stmt->bind->is_null)
+                delete m_Stmt->bind->is_null;
         }
 
-        *p_Fields = mysql_fetch_fields(*p_Result);
+        m_Prepared = false;
 
-        return true;
+        /// Free the statement
+        if (p_FreePrepareStatment)
+            m_MYSQLPreparedStatement->GetDatabase()->FreePrepareStatement(this);
+    }
+
+    MYSQL_STMT* PreparedStatement::GetStatement()
+    {
+        return m_Stmt;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+
+    /// Prepare the query
+    /// @p_Query : Query which will be executed to database
+    bool PreparedStatement::Prepare(char const* p_Query)
+    {
+        if (m_Prepared)
+        {
+            LOG_ASSERT(false, "Database", "Trying to prepare a statement but statement is already in use!");
+            return true;
+        }
+
+        RemoveBinds();
+
+        m_Query = p_Query;
+
+        return m_MYSQLPreparedStatement->Prepare(this);
     }
 
     /// BindParameters
     /// Bind parameters from storage into SQL
     void PreparedStatement::BindParameters()
     {
-        for (auto l_Itr = m_Binds.cbegin(); l_Itr != m_Binds.cend(); l_Itr++)
+        for (auto l_Itr = m_Binds.cbegin(); l_Itr != m_Binds.cend(); l_Itr++)   
         {
             uint8 l_Unsigned = 0;
             m_Bind[l_Itr->first].buffer_type = l_Itr->second.GetFieldType(l_Unsigned);
@@ -129,26 +147,29 @@ namespace SteerStone
         }
 
         if (mysql_stmt_bind_param(m_Stmt, m_Bind))
-        {
-            LOG_ERROR << "mysql_stmt_bind_param: Cannot bind parameters ON " << m_Query;
-        }
+            LOG_ERROR("Database", "Cannot bind parameters on %0", m_Query);
     }
 
-    /// RemoveBinds
     /// Remove previous binds
     void PreparedStatement::RemoveBinds()
     {
         if (!m_Stmt)
             return;
 
-        delete[] m_Bind;
-        m_Binds.clear();
-        mysql_stmt_close(m_Stmt);
+        if (m_ParametersCount)
+        {
+            delete[] m_Bind;
+            m_Bind = nullptr;
+            m_Binds.clear();
+        }
 
         m_PrepareError = false;
-        m_Bind = nullptr;
-        m_Stmt = nullptr;
-        m_Query = std::string();
         m_ParametersCount = 0;
+        m_Query.clear();
+        mysql_stmt_close(m_Stmt);
+        m_Stmt = nullptr;
     }
-}
+
+}   ///< namespace Database
+}   ///< namespace Core
+}   ///< namespace SteerStone

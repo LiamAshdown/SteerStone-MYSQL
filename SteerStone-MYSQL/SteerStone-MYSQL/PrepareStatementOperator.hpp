@@ -16,16 +16,15 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CALL_BACK_PREPARE_STATEMENT_OPERATOR_h
-#define _CALL_BACK_PREPARE_STATEMENT_OPERATOR_h
-#include "SharedDefines.h"
-#include "Operator.h"
-#include "PreparedResultSet.h"
+#pragma once
+#include <PCH/Precompiled.hpp>
+#include "Core/Core.hpp"
+#include "Database/Operator.hpp"
+#include "Database/PreparedResultSet.hpp"
 #include <future>
-#endif /* !_CALL_BACK_PREPARE_STATEMENT_OPERATOR_h */
 
-namespace SteerStone
-{
+namespace SteerStone { namespace Core { namespace Database {
+
     class PreparedStatement;
 
     class PrepareStatementOperator : public Operator
@@ -34,23 +33,23 @@ namespace SteerStone
         /// Constructor
         /// @p_PrepareStatementHolder : Keep reference of statement to be accessed later
         PrepareStatementOperator(PreparedStatement* p_PreparedStatementHolder);
-
         /// Deconstructor
         ~PrepareStatementOperator() override;
 
-    public:
-        /// GetFuture
-        /// GetFuture set
-        std::future<PreparedResultSet*> GetFuture();
+        //////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////
 
-        /// Execute
+        /// Get Future set
+        std::future<std::unique_ptr<PreparedResultSet>> GetFuture();
         /// Execute Query
         virtual bool Execute() override;
 
     private:
-        PreparedStatement* m_PreparedStatementHolder;         ///< Holds query and stores result set if any
-        std::promise<PreparedResultSet*>* m_PromiseResultSet;       ///< Promise which the non database worker thread will hold, database worker thread holds the future
+        PreparedStatement* m_PreparedStatementHolder;                         ///< Holds query and stores result set if any
+        std::promise<std::unique_ptr<PreparedResultSet>>* m_PromiseResultSet; ///< Promise which the non database worker thread will hold, database worker thread holds the future
     };
 
-} ///< NAMESPACE STEERSTONE
+}   ///< namespace Database
+}   ///< namespace Core
+}   ///< namespace SteerStone
 

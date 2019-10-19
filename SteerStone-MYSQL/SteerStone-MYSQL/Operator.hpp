@@ -16,4 +16,30 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "SQLConnection.h"
+#pragma once
+#include <PCH/Precompiled.hpp>
+#include "Core/Core.hpp"
+
+namespace SteerStone { namespace Core { namespace Database {
+
+    class Operator
+    {
+    public:
+        /// Constructor
+        Operator() {}
+
+        /// Virtual Deconstructor
+        virtual ~Operator() {}
+
+        //////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////
+
+    public:
+        /// Execute
+        /// Execute Query
+        virtual bool Execute() = 0;
+    };
+
+}   ///< namespace Database
+}   ///< namespace Core
+}   ///< namespace SteerStone

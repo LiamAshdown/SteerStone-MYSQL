@@ -16,10 +16,10 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "OperatorProcessor.h"
+#include "Database/OperatorProcessor.hpp"
 
-namespace SteerStone
-{
+namespace SteerStone { namespace Core { namespace Database {
+
     /// Constructor
     OperatorProcessor::OperatorProcessor()
     {
@@ -41,6 +41,9 @@ namespace SteerStone
     /// Process any operators which are not pending
     void OperatorProcessor::ProcessOperators()
     {
+        if (m_Operators.empty())
+            return;
+
         std::vector<CallBackOperator> l_UpdateOperators{ std::move(m_Operators) };
 
         l_UpdateOperators.erase(std::remove_if(l_UpdateOperators.begin(), l_UpdateOperators.end(), [](CallBackOperator& p_Operator)
@@ -50,4 +53,7 @@ namespace SteerStone
 
         m_Operators.insert(m_Operators.end(), std::make_move_iterator(l_UpdateOperators.begin()), std::make_move_iterator(l_UpdateOperators.end()));
     }
-} ///< NAMESPACE STEERSTONE
+
+}   ///< namespace Database
+}   ///< namespace Core
+}   ///< namespace SteerStone

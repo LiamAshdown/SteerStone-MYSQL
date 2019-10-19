@@ -16,43 +16,50 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "OperatorProcessor.h"
+#include "DatabaseTypes.hpp"
 
-namespace SteerStone
-{
+namespace SteerStone { namespace Core { namespace Database { 
+
     /// Constructor
-    CallBackOperator::CallBackOperator(std::future<PreparedResultSet*> p_PreparedFuture) : m_PreparedFuture(std::move(p_PreparedFuture)), m_OperatorFunction(nullptr)
+    CallBackOperator::CallBackOperator(std::future<std::unique_ptr<PreparedResultSet>> p_PreparedFuture) : m_PreparedFuture(std::move(p_PreparedFuture)), m_OperatorFunction(nullptr)
     {
     }
-
+    /// AddFunction
+    /// p_CallBack : Function which we will be doing a call back on
+    CallBackOperator&& CallBackOperator::AddFunction(std::function<void(std::unique_ptr<PreparedResultSet>)> p_CallBack)
+    {
+        m_OperatorFunction = std::move(p_CallBack);
+        return std::move(*this);
+    }
     /// Deconstructor
     CallBackOperator::~CallBackOperator()
     {
     }
 
-    CallBackOperator&& CallBackOperator::AddFunction(std::function<void(PreparedResultSet*)>&& p_CallBack)
-    {
-        m_OperatorFunction = std::move(p_CallBack);
-        return std::move(*this);
-    }
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 
-    /// InvokeOperator
     /// Check if operator is ready to be called
     bool CallBackOperator::InvokeOperator()
     {
-        /// Is our promise ready?
+        /// No delay, if it's not ready - then try again on next update
         if (m_PreparedFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
         {
-            PreparedResultSet* l_PreparedResultSet = m_PreparedFuture.get();
+            std::unique_ptr<PreparedResultSet> l_PreparedResultSet = m_PreparedFuture.get();
+
+            /// Now allow to free the statement on deconstruction
+            l_PreparedResultSet->AllowToFreeStatement();
 
             /// If there's a function, then execute the function with our result set
             if (m_OperatorFunction)
-                m_OperatorFunction(l_PreparedResultSet);
-
-            delete l_PreparedResultSet;
+                m_OperatorFunction(std::move(l_PreparedResultSet));
 
             return true;
         }
+
         return false;
     }
-}
+
+}   ///< namespace Database
+}   ///< namespace Core
+}   ///< namespace SteerStone
